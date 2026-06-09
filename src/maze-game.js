@@ -2,9 +2,10 @@ import { buildLevel, TOTAL_LEVELS, getTierName, getTierColor } from './maze.js';
 
 const STORAGE_KEY = 'maze-quest-progress';
 
-export class Game {
-  constructor(container) {
+export class MazeGame {
+  constructor(container, onExit) {
     this.container = container;
+    this.onExit = onExit;
     this.level = 1;
     this.player = { x: 1, y: 1 };
     this.moves = 0;
@@ -149,6 +150,7 @@ export class Game {
             ${cleared > 0 ? 'Lanjutkan' : 'Mulai Main'}
           </button>
           <button class="btn btn-secondary" data-action="levels">Pilih Level</button>
+          <button class="btn btn-ghost" data-action="exit">← Kembali ke Menu</button>
           <div class="how-to">
             <p>🖥️ Keyboard: WASD / Arrow keys</p>
             <p>📱 HP: Swipe atau tombol arah</p>
@@ -290,8 +292,16 @@ export class Game {
           this.render();
         } else if (action === 'start-level') this.startLevel(Number(el.dataset.level));
         else if (action === 'next') this.startLevel(this.level + 1);
+        else if (action === 'exit') {
+          clearInterval(this.timerId);
+          this.onExit?.();
+        }
       });
     });
+  }
+
+  destroy() {
+    clearInterval(this.timerId);
   }
 }
 

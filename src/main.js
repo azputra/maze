@@ -1,9 +1,8 @@
 import './style.css';
-import { Game } from './game.js';
+import { App } from './app.js';
 
-const app = document.getElementById('app');
-const game = new Game(app);
+const app = new App(document.getElementById('app'));
 
 window.addEventListener('resize', () => {
-  if (game.screen === 'play') game.render();
+  if (app.currentGame?.render) app.currentGame.render();
 });
