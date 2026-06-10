@@ -47,6 +47,11 @@ export class App {
               <span class="game-card-title">Ular Tangga</span>
               <span class="game-card-desc">2–4 pemain · kotak 1–100</span>
             </button>
+            <button class="game-card game-card-race" data-game="race">
+              <span class="game-card-icon">🏎️</span>
+              <span class="game-card-title">Balapan Mobil</span>
+              <span class="game-card-desc">2 pemain · HP & tablet</span>
+            </button>
           </div>
         </div>
       </div>
@@ -78,6 +83,9 @@ export class App {
     } else if (name === 'snl') {
       const { SnakesLaddersGame } = await import('./snakes-ladders.js');
       this.currentGame = new SnakesLaddersGame(this.container, () => this.showHub());
+    } else if (name === 'race') {
+      const { CarRaceGame } = await import('./car-race.js');
+      this.currentGame = new CarRaceGame(this.container, () => this.showHub());
     }
   }
 }

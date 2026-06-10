@@ -9,8 +9,9 @@ export class BallGuessGame {
     this.screen = 'menu';
     this.level = 1;
     this.phase = 'peek';
-    this.ballIndex = 0;
-    this.cups = [];
+    this.cupData = [];
+    this.slots = [];
+    this.ballCupId = 0;
     this.config = null;
     this.progress = this.loadProgress();
     this.animating = false;
@@ -29,16 +30,21 @@ export class BallGuessGame {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(this.progress));
   }
 
+  getBallSlot() {
+    return this.slots.findIndex((cupId) => this.cupData[cupId].hasBall);
+  }
+
   startLevel(level) {
     this.level = level;
     this.config = getBallLevelConfig(level);
     this.phase = 'peek';
-    this.ballIndex = Math.floor(Math.random() * this.config.cups);
-    this.cups = Array.from({ length: this.config.cups }, (_, i) => ({
+    this.ballCupId = Math.floor(Math.random() * this.config.cups);
+    this.cupData = Array.from({ length: this.config.cups }, (_, i) => ({
       id: i,
-      hasBall: i === this.ballIndex,
+      hasBall: i === this.ballCupId,
       lifted: false,
     }));
+    this.slots = Array.from({ length: this.config.cups }, (_, i) => i);
     this.screen = 'play';
     this.render();
     if (this.phase === 'peek') {
@@ -49,21 +55,18 @@ export class BallGuessGame {
   async startShuffle() {
     if (this.animating) return;
     this.phase = 'shuffle';
-    this.cups.forEach((c) => {
+    this.cupData.forEach((c) => {
       c.lifted = false;
     });
     this.render();
-
-    await sleep(400);
+    await sleep(500);
     this.animating = true;
 
     for (let i = 0; i < this.config.swaps; i++) {
-      const a = Math.floor(Math.random() * this.config.cups);
+      let a = Math.floor(Math.random() * this.config.cups);
       let b = Math.floor(Math.random() * this.config.cups);
       while (b === a) b = Math.floor(Math.random() * this.config.cups);
-      this.swapBall(a, b);
-      this.highlightSwap(a, b);
-      await sleep(this.config.speed);
+      await this.animateSwap(a, b);
     }
 
     this.animating = false;
@@ -71,33 +74,48 @@ export class BallGuessGame {
     this.render();
   }
 
-  swapBall(a, b) {
-    const ballAtA = this.cups[a].hasBall;
-    const ballAtB = this.cups[b].hasBall;
-    this.cups[a].hasBall = ballAtB;
-    this.cups[b].hasBall = ballAtA;
-    if (ballAtA) this.ballIndex = b;
-    if (ballAtB) this.ballIndex = a;
+  async animateSwap(slotA, slotB) {
+    const cupA = this.container.querySelector(`[data-slot="${slotA}"]`);
+    const cupB = this.container.querySelector(`[data-slot="${slotB}"]`);
+    if (!cupA || !cupB) {
+      [this.slots[slotA], this.slots[slotB]] = [this.slots[slotB], this.slots[slotA]];
+      this.render();
+      await sleep(this.config.speed);
+      return;
+    }
+
+    const rectA = cupA.getBoundingClientRect();
+    const rectB = cupB.getBoundingClientRect();
+    const dx = rectB.left - rectA.left;
+    const dy = rectB.top - rectA.top;
+
+    cupA.style.transition = `transform ${this.config.speed}ms ease-in-out`;
+    cupB.style.transition = `transform ${this.config.speed}ms ease-in-out`;
+    cupA.style.transform = `translate(${dx}px, ${dy}px)`;
+    cupB.style.transform = `translate(${-dx}px, ${-dy}px)`;
+    cupA.classList.add('swapping');
+    cupB.classList.add('swapping');
+
+    await sleep(this.config.speed);
+
+    [this.slots[slotA], this.slots[slotB]] = [this.slots[slotB], this.slots[slotA]];
+    cupA.style.transition = '';
+    cupB.style.transition = '';
+    cupA.style.transform = '';
+    cupB.style.transform = '';
+    this.render();
+    await sleep(60);
   }
 
-  highlightSwap(a, b) {
-    this.container.querySelectorAll('.ball-cup').forEach((el, idx) => {
-      el.classList.toggle('swapping', idx === a || idx === b);
-    });
-    setTimeout(() => {
-      this.container.querySelectorAll('.ball-cup').forEach((el) => el.classList.remove('swapping'));
-    }, this.config.speed * 0.8);
-  }
-
-  onGuess(index) {
+  onGuess(slotIndex) {
     if (this.phase !== 'guess' || this.animating) return;
     this.phase = 'reveal';
-    this.cups.forEach((c, i) => {
+    this.cupData.forEach((c) => {
       c.lifted = true;
     });
     this.render();
 
-    const correct = index === this.ballIndex;
+    const correct = slotIndex === this.getBallSlot();
     setTimeout(() => {
       if (correct) {
         const key = String(this.level);
@@ -137,7 +155,7 @@ export class BallGuessGame {
           <button class="btn btn-ghost" data-action="exit">← Kembali ke Menu</button>
           <div class="how-to">
             <p>👀 Perhatikan bola di bawah gelas</p>
-            <p>🔀 Gelas akan diacak — tebak posisinya!</p>
+            <p>🔀 Gelas bergerak — tebak posisinya!</p>
           </div>
         </div>
       </div>
@@ -168,7 +186,7 @@ export class BallGuessGame {
           <h2>Pilih Level</h2>
           <span class="progress-text">${this.progress.unlocked}/${TOTAL_BALL_LEVELS}</span>
         </header>
-        <div class="level-grid">${cards}</div>
+        <div class="level-grid level-grid-2col">${cards}</div>
       </div>
     `;
     this.bindActions();
@@ -180,27 +198,30 @@ export class BallGuessGame {
     const showBall = this.phase === 'peek' || this.phase === 'reveal';
     const canGuess = this.phase === 'guess';
 
-    const cupsHtml = this.cups
-      .map((cup, i) => {
+    const cupsHtml = this.slots
+      .map((cupId, slotIndex) => {
+        const cup = this.cupData[cupId];
         const ballVisible = showBall && cup.hasBall;
         return `
           <button class="ball-cup ${cup.lifted ? 'lifted' : ''} ${canGuess ? 'guessable' : ''}"
-            data-cup="${i}" ${canGuess ? '' : 'disabled'}>
+            data-slot="${slotIndex}" data-cup="${cupId}" ${canGuess ? '' : 'disabled'}
+            style="grid-row:${Math.floor(slotIndex / 2) + 1};grid-column:${(slotIndex % 2) + 1}">
             <div class="ball-cup-inner">
               <span class="ball-cup-lid">${cup.lifted ? '' : '🥤'}</span>
-              <span class="ball-under ${ballVisible ? 'visible' : ''}">${cfg.ball}</span>
+              <span class="ball-under ${ballVisible ? 'visible' : ''} ${this.phase === 'shuffle' ? 'ball-hidden' : ''}">${cfg.ball}</span>
             </div>
-            <span class="ball-cup-num">${i + 1}</span>
+            <span class="ball-cup-num">${slotIndex + 1}</span>
           </button>
         `;
       })
       .join('');
 
+    const rows = Math.ceil(cfg.cups / 2);
     const hint =
       this.phase === 'peek'
         ? '👀 Perhatikan posisi bola...'
         : this.phase === 'shuffle'
-          ? '🔀 Gelas sedang diacak...'
+          ? '🔀 Gelas & bola sedang bergerak...'
           : this.phase === 'guess'
             ? '👆 Tebak di gelas nomor berapa?'
             : '...';
@@ -216,16 +237,16 @@ export class BallGuessGame {
         </header>
         <div class="ball-hud">
           <span>${hint}</span>
-          <span>${cfg.swaps} kali acak</span>
+          <span>${cfg.swaps}× acak</span>
         </div>
         <div class="ball-stage">
-          <div class="ball-cups" style="--cups:${cfg.cups}">${cupsHtml}</div>
+          <div class="ball-cups ball-cups-2col" style="--rows:${rows}">${cupsHtml}</div>
         </div>
       </div>
     `;
 
     this.container.querySelectorAll('.ball-cup.guessable').forEach((btn) => {
-      btn.addEventListener('click', () => this.onGuess(Number(btn.dataset.cup)));
+      btn.addEventListener('click', () => this.onGuess(Number(btn.dataset.slot)));
     });
     this.bindActions();
   }
@@ -248,12 +269,13 @@ export class BallGuessGame {
   }
 
   renderLose() {
+    const ballSlot = this.getBallSlot();
     this.container.innerHTML = `
       <div class="screen win-screen">
         <div class="win-content">
           <div class="win-icon">😅</div>
           <h2>Belum tepat!</h2>
-          <p class="win-level">Bola ada di gelas ${this.ballIndex + 1}</p>
+          <p class="win-level">Bola ada di gelas ${ballSlot + 1}</p>
           <button class="btn btn-primary" data-action="retry">Coba Lagi</button>
           <button class="btn btn-secondary" data-action="levels">Pilih Level</button>
           <button class="btn btn-ghost" data-action="menu">Menu Utama</button>
