@@ -1165,12 +1165,7 @@ body {
 }
 
 .snl-players-bar {
-  display: flex;
-  gap: 6px;
-  padding: 8px 10px;
-  overflow-x: auto;
-  flex-shrink: 0;
-  -webkit-overflow-scrolling: touch;
+  display: none;
 }
 
 .snl-player-chip {
@@ -1284,9 +1279,19 @@ body {
   box-shadow: inset 0 0 0 2px #eab308;
 }
 
+.snl-cell.challenge {
+  background: #fef08a !important;
+  box-shadow: inset 0 0 0 1px rgba(234, 179, 8, 0.5);
+}
+
 .snl-cell.step-flash {
-  box-shadow: inset 0 0 0 3px #6366f1;
+  animation: cell-flash 0.45s ease;
   z-index: 2;
+}
+
+@keyframes cell-flash {
+  0%, 100% { box-shadow: inset 0 0 0 0 transparent; transform: scale(1); }
+  50% { box-shadow: inset 0 0 0 4px var(--primary); transform: scale(1.08); }
 }
 
 .snl-num {
@@ -1332,42 +1337,143 @@ body {
 .snl-token {
   font-size: clamp(0.65rem, 3vw, 0.85rem);
   line-height: 1;
-  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.3));
-  animation: token-bounce 0.3s ease;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3));
 }
 
-@keyframes token-bounce {
-  0% { transform: scale(0.5); }
-  60% { transform: scale(1.15); }
-  100% { transform: scale(1); }
+.snl-token.token-hop {
+  animation: token-hop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.snl-token.token-active-hop {
+  animation: token-hop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), token-glow 0.35s ease;
+}
+
+@keyframes token-hop {
+  0% { transform: scale(0.6) translateY(6px); opacity: 0.6; }
+  50% { transform: scale(1.25) translateY(-8px); }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+@keyframes token-glow {
+  0%, 100% { filter: drop-shadow(0 0 0 transparent); }
+  50% { filter: drop-shadow(0 0 6px var(--pc)); }
 }
 
 .snl-controls {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 16px;
+  display: none;
+}
+
+/* Turn bar — dice moves to active player */
+.snl-turn-bar {
+  display: grid;
+  gap: 8px;
+  padding: 10px 12px;
   padding-bottom: calc(10px + var(--safe-bottom));
   flex-shrink: 0;
   background: var(--surface);
   border-top: 1px solid var(--surface2);
+  transition: all 0.35s ease;
+}
+
+.snl-turn-bar.snl-pcount-2 {
+  grid-template-columns: 1fr 1fr;
+}
+
+.snl-turn-bar.snl-pcount-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.snl-turn-bar.snl-pcount-4 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.snl-turn-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 8px;
+  border-radius: 12px;
+  border: 2px solid var(--surface2);
+  background: var(--bg);
+  opacity: 0.55;
+  transform: scale(0.94);
+  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.snl-turn-zone.active {
+  opacity: 1;
+  transform: scale(1);
+  border-color: var(--pc);
+  background: color-mix(in srgb, var(--pc) 12%, var(--bg));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--pc) 25%, transparent),
+    0 4px 20px color-mix(in srgb, var(--pc) 20%, transparent);
+  animation: zone-pulse 2s ease infinite;
+}
+
+@keyframes zone-pulse {
+  0%, 100% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--pc) 25%, transparent), 0 4px 20px color-mix(in srgb, var(--pc) 20%, transparent); }
+  50% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--pc) 35%, transparent), 0 6px 24px color-mix(in srgb, var(--pc) 30%, transparent); }
+}
+
+.snl-zone-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  width: 100%;
+  justify-content: center;
+}
+
+.snl-zone-emoji { font-size: 1rem; }
+.snl-zone-name { color: var(--text); }
+.snl-zone-pos {
+  background: var(--pc);
+  color: #fff;
+  font-size: 0.6rem;
+  padding: 1px 5px;
+  border-radius: 999px;
+  margin-left: auto;
+}
+
+.snl-zone-wait {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 1.2rem;
+  padding: 8px 0;
+  color: var(--muted);
+}
+
+.snl-zone-wait span {
+  font-size: 0.6rem;
+  font-weight: 600;
 }
 
 .snl-dice-btn {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 12px;
-  padding: 12px 28px;
+  gap: 4px;
+  width: 100%;
+  padding: 10px 8px;
   border: none;
-  border-radius: 999px;
-  background: linear-gradient(135deg, #a855f7, #6366f1);
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--pc), color-mix(in srgb, var(--pc) 70%, #6366f1));
   color: white;
   cursor: pointer;
   font-weight: 700;
-  font-size: 1rem;
-  box-shadow: 0 4px 16px rgba(168, 85, 247, 0.4);
+  font-size: 0.75rem;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--pc) 40%, transparent);
   transition: transform 0.1s;
+  animation: dice-appear 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes dice-appear {
+  from { transform: scale(0.5); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
 }
 
 .snl-dice-btn:active:not(.disabled) {
@@ -1380,12 +1486,23 @@ body {
 }
 
 .snl-dice-face {
-  font-size: 2rem;
+  font-size: 1.8rem;
   line-height: 1;
 }
 
-.snl-dice-face.dice-roll {
-  animation: dice-spin 0.1s linear;
+.snl-dice-face.dice-roll,
+.snl-dice-face.dice-rolling {
+  animation: dice-spin 0.12s linear infinite;
+}
+
+.snl-dice-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.snl-turn {
+  display: none;
 }
 
 @keyframes dice-spin {

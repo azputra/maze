@@ -39,9 +39,11 @@ export const FUN_COMMANDS = [
   { emoji: '🌟', text: 'Sebut 3 hal yang bikin kamu senang!' },
 ];
 
-/** Challenge squares — spread across the board */
+/** Challenge squares — spread across board (avoid snake/ladder heads) */
 export const CHALLENGE_SQUARES = [
-  6, 12, 18, 22, 27, 33, 38, 44, 48, 55, 61, 66, 72, 76, 82, 88, 94, 97,
+  3, 6, 8, 11, 13, 15, 16, 19, 22, 24, 26, 30, 32, 35, 37, 41, 43, 45, 47, 49,
+  52, 53, 56, 58, 60, 61, 65, 68, 70, 72, 74, 76, 77, 79, 80, 83, 85, 86, 88,
+  89, 90, 92, 94, 96, 97, 98,
 ];
 
 export const PLAYER_SETUP = [

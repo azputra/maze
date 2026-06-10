@@ -23,6 +23,8 @@ export class SnakesLaddersGame {
     this.message = '';
     this.overlay = null;
     this.winner = null;
+    this.hopCell = null;
+    this.flashCell = null;
     this.render();
   }
 
@@ -34,6 +36,7 @@ export class SnakesLaddersGame {
     }));
     this.currentPlayer = 0;
     this.winner = null;
+    this.hopCell = null;
     this.message = `${this.players[0].emoji} ${this.players[0].name} mulai duluan!`;
     this.screen = 'play';
     this.render();
@@ -42,19 +45,20 @@ export class SnakesLaddersGame {
   async rollDice() {
     if (this.rolling || this.moving || this.overlay || this.winner) return;
     this.rolling = true;
-    this.message = '🎲 Mengocok dadu...';
+    const cur = this.players[this.currentPlayer];
+    this.message = `${cur.emoji} mengocok dadu...`;
     this.render();
 
-    for (let i = 0; i < 12; i++) {
+    for (let i = 0; i < 14; i++) {
       this.dice = 1 + Math.floor(Math.random() * 6);
       this.updateDiceDisplay();
-      await sleep(80 + i * 8);
+      await sleep(70 + i * 10);
     }
 
     this.dice = 1 + Math.floor(Math.random() * 6);
     this.rolling = false;
     this.render();
-    await sleep(300);
+    await sleep(350);
     await this.movePlayer(this.dice);
   }
 
@@ -62,9 +66,24 @@ export class SnakesLaddersGame {
     const el = this.container.querySelector('.snl-dice-face');
     if (el) {
       el.textContent = DICE_EMOJI[this.dice];
+      el.classList.remove('dice-roll');
+      void el.offsetWidth;
       el.classList.add('dice-roll');
-      setTimeout(() => el.classList.remove('dice-roll'), 100);
     }
+  }
+
+  async walkCells(player, from, to, stepMs) {
+    const dir = to > from ? 1 : -1;
+    for (let p = from + dir; dir > 0 ? p <= to : p >= to; p += dir) {
+      player.pos = p;
+      this.hopCell = p;
+      this.flashCell = p;
+      this.render();
+      this.scrollToCell(p);
+      await sleep(stepMs);
+    }
+    this.hopCell = null;
+    this.flashCell = null;
   }
 
   async movePlayer(steps) {
@@ -74,6 +93,10 @@ export class SnakesLaddersGame {
 
     if (target > 100) {
       this.message = `${player.emoji} Butuh angka pas! Tetap di ${player.pos}`;
+      this.flashCell = player.pos;
+      this.render();
+      await sleep(600);
+      this.flashCell = null;
       this.moving = false;
       this.nextTurn();
       return;
@@ -84,10 +107,14 @@ export class SnakesLaddersGame {
 
     for (let p = player.pos + 1; p <= target; p++) {
       player.pos = p;
-      this.highlightCell(p);
+      this.hopCell = p;
+      this.flashCell = p;
       this.render();
-      await sleep(180);
+      this.scrollToCell(p);
+      await sleep(220);
     }
+    this.hopCell = null;
+    this.flashCell = null;
 
     const ladder = getLadderAt(player.pos);
     if (ladder) {
@@ -102,13 +129,19 @@ export class SnakesLaddersGame {
     if (player.pos === 100) {
       this.winner = player;
       this.message = `🏆 ${player.emoji} ${player.name} MENANG!`;
-      this.moving = false;
+      this.flashCell = 100;
       this.render();
+      this.scrollToCell(100);
+      this.moving = false;
       return;
     }
 
     if (getChallengeAt(player.pos)) {
+      this.flashCell = player.pos;
+      this.render();
+      await sleep(400);
       await this.showChallenge(player);
+      this.flashCell = null;
     }
 
     this.moving = false;
@@ -124,33 +157,36 @@ export class SnakesLaddersGame {
       emoji: isLadder ? '🪜' : '🐍',
       title: isLadder ? 'Naik Tangga!' : 'Kena Ular!',
       text: isLadder
-        ? `Yay! Loncat dari ${from} ke ${to}!`
+        ? `Yay! Naik dari ${from} ke ${to}!`
         : `Waaah! Turun dari ${from} ke ${to}!`,
     };
     this.message = this.overlay.text;
+    this.flashCell = from;
     this.render();
+    this.scrollToCell(from);
 
-    await sleep(isLadder ? 1200 : 1500);
-
-    player.pos = to;
-    const board = this.container.querySelector('.snl-board');
-    board?.classList.add(isLadder ? 'board-shake-up' : 'board-shake-down');
-    this.render();
-    await sleep(400);
-    board?.classList.remove('board-shake-up', 'board-shake-down');
+    await sleep(isLadder ? 900 : 1100);
 
     this.overlay = null;
     this.render();
-    await sleep(300);
+
+    await this.walkCells(player, from, to, isLadder ? 90 : 75);
+
+    const board = this.container.querySelector('.snl-board');
+    board?.classList.add(isLadder ? 'board-shake-up' : 'board-shake-down');
+    this.render();
+    await sleep(500);
+    board?.classList.remove('board-shake-up', 'board-shake-down');
+    await sleep(200);
   }
 
   showChallenge() {
     return new Promise((resolve) => {
-      const cmd = getRandomCommand(Date.now());
+      const cmd = getRandomCommand(Date.now() + this.currentPlayer * 999);
       this.overlay = {
         type: 'challenge',
         emoji: cmd.emoji,
-        title: 'Tantangan Seru!',
+        title: 'Tantangan Seru! ⭐',
         text: cmd.text,
       };
       this.message = `${cmd.emoji} ${cmd.text}`;
@@ -167,14 +203,59 @@ export class SnakesLaddersGame {
     if (this.winner) return;
     this.currentPlayer = (this.currentPlayer + 1) % this.playerCount;
     const p = this.players[this.currentPlayer];
-    this.message = `Giliran ${p.emoji} ${p.name}`;
+    this.message = `Giliran ${p.emoji} ${p.name} — lempar dadu!`;
     this.render();
   }
 
-  highlightCell(n) {
-    this.container.querySelectorAll('.snl-cell').forEach((el) => {
-      el.classList.toggle('step-flash', Number(el.dataset.num) === n);
+  scrollToCell(n) {
+    requestAnimationFrame(() => {
+      const cell = this.container.querySelector(`[data-num="${n}"]`);
+      cell?.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
     });
+  }
+
+  renderControls(canRoll) {
+    return `
+      <div class="snl-turn-bar snl-pcount-${this.playerCount}" data-active="${this.currentPlayer}">
+        ${this.players
+          .map((p, i) => {
+            const isActive = i === this.currentPlayer && !this.winner;
+            const showDice = isActive && (canRoll || this.rolling);
+            const label = this.rolling && isActive
+              ? 'Mengocok...'
+              : !canRoll && isActive
+                ? 'Tunggu...'
+                : 'Lempar Dadu!';
+
+            return `
+              <div class="snl-turn-zone ${isActive ? 'active' : ''}" style="--pc:${p.color}">
+                <div class="snl-zone-header">
+                  <span class="snl-zone-emoji">${p.emoji}</span>
+                  <span class="snl-zone-name">${p.name}</span>
+                  <span class="snl-zone-pos">${p.pos}</span>
+                </div>
+                ${
+                  showDice
+                    ? `
+                  <button class="snl-dice-btn ${canRoll && !this.rolling ? '' : 'disabled'}"
+                    data-action="roll" ${canRoll && !this.rolling ? '' : 'disabled'}>
+                    <span class="snl-dice-face ${this.rolling ? 'dice-rolling' : ''}">${DICE_EMOJI[this.dice]}</span>
+                    <span class="snl-dice-label">${label}</span>
+                  </button>
+                `
+                    : `
+                  <div class="snl-zone-wait">
+                    ${isActive ? '⏳' : '💤'}
+                    <span>${isActive ? 'Giliranmu!' : 'Tunggu giliran'}</span>
+                  </div>
+                `
+                }
+              </div>
+            `;
+          })
+          .join('')}
+      </div>
+    `;
   }
 
   render() {
@@ -194,9 +275,9 @@ export class SnakesLaddersGame {
           <button class="btn btn-primary" data-action="setup">Mulai Main</button>
           <button class="btn btn-ghost" data-action="exit">← Kembali ke Menu</button>
           <div class="how-to">
-            <p>🎲 Lempar dadu & maju ke kotak 100</p>
+            <p>🎲 Dadu pindah ke pemain yang giliran</p>
             <p>🪜 Naik tangga · 🐍 hindari ular</p>
-            <p>⭐ Kotak bintang = tantangan seru!</p>
+            <p>⭐ Banyak kotak bintang = tantangan seru!</p>
           </div>
         </div>
       </div>
@@ -238,7 +319,6 @@ export class SnakesLaddersGame {
   }
 
   renderPlay() {
-    const cur = this.players[this.currentPlayer];
     const canRoll = !this.rolling && !this.moving && !this.overlay && !this.winner;
 
     const cells = [];
@@ -252,16 +332,24 @@ export class SnakesLaddersGame {
         const tokens = this.players
           .map((p, i) => (p.pos === num ? { ...p, index: i } : null))
           .filter(Boolean);
+        const isFlash = this.flashCell === num;
+        const isHop = this.hopCell === num;
 
         cells.push(`
-          <div class="snl-cell ${light ? 'light' : 'dark'} ${num === 100 ? 'finish' : ''} ${num === 1 ? 'start' : ''}"
+          <div class="snl-cell ${light ? 'light' : 'dark'} ${num === 100 ? 'finish' : ''} ${num === 1 ? 'start' : ''} ${challenge ? 'challenge' : ''} ${isFlash ? 'step-flash' : ''}"
             data-num="${num}" style="grid-row:${r + 1};grid-column:${c + 1}">
             <span class="snl-num">${num}</span>
             ${ladder ? '<span class="snl-icon snl-ladder-icon">🪜</span>' : ''}
             ${snake ? '<span class="snl-icon snl-snake-icon">🐍</span>' : ''}
             ${challenge ? '<span class="snl-icon snl-star-icon">⭐</span>' : ''}
             <div class="snl-tokens">
-              ${tokens.map((t) => `<span class="snl-token" style="--pc:${t.color}">${t.emoji}</span>`).join('')}
+              ${tokens
+                .map(
+                  (t, ti) =>
+                    `<span class="snl-token ${isHop ? 'token-hop' : ''} ${this.currentPlayer === t.index && isHop ? 'token-active-hop' : ''}"
+                      style="--pc:${t.color};--delay:${ti * 0.05}s">${t.emoji}</span>`
+                )
+                .join('')}
             </div>
           </div>
         `);
@@ -303,33 +391,14 @@ export class SnakesLaddersGame {
           <button class="btn-icon" data-action="menu">←</button>
           <div class="level-info">
             <span class="level-badge snl-badge">Ular Tangga</span>
-            <span class="tier-label">${this.playerCount} pemain · kotak 100</span>
+            <span class="tier-label">${this.playerCount} pemain · ⭐ ${CHALLENGE_SQUARES.length} tantangan</span>
           </div>
         </header>
-        <div class="snl-players-bar">
-          ${this.players
-            .map(
-              (p, i) => `
-            <div class="snl-player-chip ${i === this.currentPlayer && !this.winner ? 'active' : ''}" style="--pc:${p.color}">
-              <span>${p.emoji}</span>
-              <span class="snl-chip-name">${p.name}</span>
-              <span class="snl-chip-pos">${p.pos}</span>
-            </div>
-          `
-            )
-            .join('')}
-        </div>
         <div class="snl-message">${this.message}</div>
         <div class="snl-board-scroll">
           <div class="snl-board">${cells.join('')}</div>
         </div>
-        <div class="snl-controls">
-          <button class="snl-dice-btn ${canRoll ? '' : 'disabled'}" data-action="roll" ${canRoll ? '' : 'disabled'}>
-            <span class="snl-dice-face">${DICE_EMOJI[this.dice]}</span>
-            <span class="snl-dice-label">${canRoll ? 'Lempar Dadu!' : 'Tunggu...'}</span>
-          </button>
-          ${cur && !this.winner ? `<span class="snl-turn">Giliran: ${cur.emoji} ${cur.name}</span>` : ''}
-        </div>
+        ${this.renderControls(canRoll)}
         ${overlayHtml}
         ${winHtml}
       </div>
