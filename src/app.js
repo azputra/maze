@@ -42,6 +42,11 @@ export class App {
               <span class="game-card-title">Tebak Bola</span>
               <span class="game-card-desc">50 level tebak posisi bola</span>
             </button>
+            <button class="game-card game-card-snl" data-game="snl">
+              <span class="game-card-icon">🐍</span>
+              <span class="game-card-title">Ular Tangga</span>
+              <span class="game-card-desc">2–4 pemain · kotak 1–100</span>
+            </button>
           </div>
         </div>
       </div>
@@ -70,6 +75,9 @@ export class App {
     } else if (name === 'ball') {
       const { BallGuessGame } = await import('./ball-guess.js');
       this.currentGame = new BallGuessGame(this.container, () => this.showHub());
+    } else if (name === 'snl') {
+      const { SnakesLaddersGame } = await import('./snakes-ladders.js');
+      this.currentGame = new SnakesLaddersGame(this.container, () => this.showHub());
     }
   }
 }
