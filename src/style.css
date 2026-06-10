@@ -585,6 +585,9 @@ body {
 .game-card-ball { border-left: 4px solid #0ea5e9; }
 .game-card-snl { border-left: 4px solid #a855f7; }
 .game-card-race { border-left: 4px solid #ef4444; }
+.game-card-catch { border-left: 4px solid #0ea5e9; }
+.game-card-puzzle { border-left: 4px solid #f97316; }
+.game-card-simon { border-left: 4px solid #ec4899; }
 
 .game-card-icon {
   font-size: 1.6rem;
@@ -1726,6 +1729,236 @@ body {
     height: 52px;
     font-size: 1.2rem;
   }
+}
+
+/* ── Catch Game ── */
+.catch-play-screen { overflow: hidden; }
+.catch-badge { background: #0ea5e9; }
+.catch-canvas-wrap {
+  flex: 1;
+  min-height: 0;
+  background: #0c4a6e;
+}
+
+/* ── Puzzle Race ── */
+.puzzle-play-screen { overflow: hidden; }
+.puzzle-badge { background: #f97316; }
+
+.puzzle-pick {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin: 16px 0;
+  flex-wrap: wrap;
+}
+
+.puzzle-pick-btn {
+  padding: 12px 14px;
+  border: 2px solid var(--surface2);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 1.2rem;
+  line-height: 1.3;
+}
+
+.puzzle-pick-btn.active {
+  border-color: #f97316;
+  background: rgba(249, 115, 22, 0.15);
+}
+
+.puzzle-pick-btn small {
+  font-size: 0.65rem;
+  color: var(--muted);
+}
+
+.puzzle-split {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.puzzle-side {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 6px;
+  gap: 8px;
+  min-width: 0;
+}
+
+.puzzle-p1 { border-right: 2px solid var(--surface2); }
+
+.puzzle-side-label {
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.puzzle-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  width: min(100%, 160px);
+  aspect-ratio: 1;
+}
+
+.puzzle-tile {
+  aspect-ratio: 1;
+  border: none;
+  border-radius: 8px;
+  background: var(--surface);
+  border: 2px solid var(--surface2);
+  font-size: clamp(1.4rem, 7vw, 2rem);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.1s, background 0.1s;
+}
+
+.puzzle-tile:active:not(.empty) {
+  transform: scale(0.92);
+  background: rgba(99, 102, 241, 0.2);
+}
+
+.puzzle-tile.empty {
+  background: transparent;
+  border-color: transparent;
+  cursor: default;
+}
+
+@media (min-width: 600px) {
+  .puzzle-grid { width: min(100%, 200px); }
+}
+
+/* ── Simon Says ── */
+.simon-play-screen { overflow: hidden; }
+.simon-badge { background: #ec4899; }
+
+.simon-message {
+  text-align: center;
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.simon-players {
+  display: flex;
+  gap: 6px;
+  padding: 8px 12px;
+  overflow-x: auto;
+  flex-shrink: 0;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.simon-player-chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 2px solid var(--surface2);
+  font-size: 0.75rem;
+  font-weight: 700;
+  opacity: 0.5;
+  transition: all 0.3s;
+}
+
+.simon-player-chip.active {
+  opacity: 1;
+  border-color: var(--pc);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--pc) 30%, transparent);
+  transform: scale(1.05);
+}
+
+.simon-player-chip.out {
+  opacity: 0.3;
+  text-decoration: line-through;
+}
+
+.simon-score {
+  background: var(--pc);
+  color: #fff;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 0.65rem;
+}
+
+.simon-out { color: #ef4444; font-size: 0.7rem; }
+
+.simon-pad {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 16px 24px;
+  max-width: 360px;
+  margin: 0 auto;
+  width: 100%;
+  align-content: center;
+}
+
+.simon-pad.locked { opacity: 0.7; pointer-events: none; }
+
+.simon-btn {
+  aspect-ratio: 1;
+  border: none;
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--sc) 25%, var(--surface));
+  border: 3px solid var(--sc);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.1s, filter 0.1s;
+  min-height: 80px;
+}
+
+.simon-btn:active:not(:disabled) {
+  transform: scale(0.94);
+}
+
+.simon-btn.simon-flash {
+  background: var(--sc);
+  transform: scale(1.08);
+  box-shadow: 0 0 24px var(--sc);
+  animation: simon-pulse 0.45s ease;
+}
+
+.simon-btn.simon-tap {
+  background: var(--sc);
+  transform: scale(0.95);
+}
+
+@keyframes simon-pulse {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.4); }
+}
+
+.simon-emoji { font-size: clamp(2rem, 12vw, 3rem); }
+
+.simon-hint {
+  text-align: center;
+  padding: 10px;
+  padding-bottom: calc(10px + var(--safe-bottom));
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.simon-final-scores {
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+  line-height: 1.8;
 }
 
 

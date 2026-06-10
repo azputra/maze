@@ -52,6 +52,21 @@ export class App {
               <span class="game-card-title">Balapan Mobil</span>
               <span class="game-card-desc">2 pemain · HP & tablet</span>
             </button>
+            <button class="game-card game-card-catch" data-game="catch">
+              <span class="game-card-icon">🧺</span>
+              <span class="game-card-title">Tangkap Benda</span>
+              <span class="game-card-desc">2 pemain · 60 detik</span>
+            </button>
+            <button class="game-card game-card-puzzle" data-game="puzzle">
+              <span class="game-card-icon">🧩</span>
+              <span class="game-card-title">Puzzle Balapan</span>
+              <span class="game-card-desc">2 pemain · siapa duluan</span>
+            </button>
+            <button class="game-card game-card-simon" data-game="simon">
+              <span class="game-card-icon">🎵</span>
+              <span class="game-card-title">Simon Says</span>
+              <span class="game-card-desc">2–4 pemain · ikut pola</span>
+            </button>
           </div>
         </div>
       </div>
@@ -86,6 +101,15 @@ export class App {
     } else if (name === 'race') {
       const { CarRaceGame } = await import('./car-race.js');
       this.currentGame = new CarRaceGame(this.container, () => this.showHub());
+    } else if (name === 'catch') {
+      const { CatchGame } = await import('./catch-game.js');
+      this.currentGame = new CatchGame(this.container, () => this.showHub());
+    } else if (name === 'puzzle') {
+      const { PuzzleRaceGame } = await import('./puzzle-race.js');
+      this.currentGame = new PuzzleRaceGame(this.container, () => this.showHub());
+    } else if (name === 'simon') {
+      const { SimonSaysGame } = await import('./simon-says.js');
+      this.currentGame = new SimonSaysGame(this.container, () => this.showHub());
     }
   }
 }
