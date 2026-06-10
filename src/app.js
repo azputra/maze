@@ -32,6 +32,16 @@ export class App {
               <span class="game-card-title">Flip Match</span>
               <span class="game-card-desc">Cocokkan gambar berpasangan</span>
             </button>
+            <button class="game-card game-card-chess" data-game="chess">
+              <span class="game-card-icon">♟️</span>
+              <span class="game-card-title">Catur Anak</span>
+              <span class="game-card-desc">Catur sederhana usia 4–10 tahun</span>
+            </button>
+            <button class="game-card game-card-ball" data-game="ball">
+              <span class="game-card-icon">⚽</span>
+              <span class="game-card-title">Tebak Bola</span>
+              <span class="game-card-desc">50 level tebak posisi bola</span>
+            </button>
           </div>
         </div>
       </div>
@@ -54,6 +64,12 @@ export class App {
     } else if (name === 'flip') {
       const { FlipMatchGame } = await import('./flip-match.js');
       this.currentGame = new FlipMatchGame(this.container, () => this.showHub());
+    } else if (name === 'chess') {
+      const { KidsChessGame } = await import('./kids-chess.js');
+      this.currentGame = new KidsChessGame(this.container, () => this.showHub());
+    } else if (name === 'ball') {
+      const { BallGuessGame } = await import('./ball-guess.js');
+      this.currentGame = new BallGuessGame(this.container, () => this.showHub());
     }
   }
 }

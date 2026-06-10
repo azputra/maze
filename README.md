@@ -4,11 +4,12 @@ Game labirin 50 level — responsive untuk HP dan desktop.
 
 ## Fitur
 
-- 50 level dengan tingkat kesulitan meningkat (5 tier)
-- Kontrol keyboard (WASD / arrow keys) dan touch (swipe + D-pad)
-- Progress tersimpan di browser (localStorage)
-- Best time & best moves per level
-- Responsive mobile-first
+- **Maze Quest** — 50 level labirin
+- **Cari Beda** — temukan perbedaan 2 gambar (10 level)
+- **Flip Match** — cocokkan kartu berpasangan (10 level)
+- **Catur Anak** — papan catur dengan bidak emoji, gerakan sederhana (usia 4–10)
+- **Tebak Bola** — 50 level tebak posisi bola setelah gelas diacak
+- Responsive mobile-first, progress tersimpan di browser
 
 ## Development
 
