@@ -1,3 +1,5 @@
+import { gameBanner } from './ui-helpers.js';
+
 const PUZZLES = [
   { name: 'Hewan', tiles: ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼'] },
   { name: 'Buah', tiles: ['🍎', '🍊', '🍋', '🍇', '🍓', '🍑', '🥝', '🍌'] },
@@ -17,6 +19,17 @@ export class PuzzleRaceGame {
     this.render();
   }
 
+  getNeighbors(empty) {
+    const r = Math.floor(empty / 3);
+    const c = empty % 3;
+    const n = [];
+    if (r > 0) n.push(empty - 3);
+    if (r < 2) n.push(empty + 3);
+    if (c > 0) n.push(empty - 1);
+    if (c < 2) n.push(empty + 1);
+    return n;
+  }
+
   createSolved() {
     return [0, 1, 2, 3, 4, 5, 6, 7, 8];
   }
@@ -31,17 +44,6 @@ export class PuzzleRaceGame {
       empty = next;
     }
     return board;
-  }
-
-  getNeighbors(empty) {
-    const r = Math.floor(empty / 3);
-    const c = empty % 3;
-    const n = [];
-    if (r > 0) n.push(empty - 3);
-    if (r < 2) n.push(empty + 3);
-    if (c > 0) n.push(empty - 1);
-    if (c < 2) n.push(empty + 1);
-    return n;
   }
 
   isSolved(board) {
@@ -72,6 +74,26 @@ export class PuzzleRaceGame {
     this.render();
   }
 
+  renderBoard(player, board) {
+    const tiles = PUZZLES[this.puzzleIdx].tiles;
+    const empty = board.indexOf(8);
+    const movable = new Set(this.getNeighbors(empty));
+
+    return board
+      .map((idx, i) => {
+        const isEmpty = idx === 8;
+        const canMove = !isEmpty && movable.has(i);
+        return `
+          <button class="puzzle-tile ${isEmpty ? 'empty' : ''} ${canMove ? 'can-move' : ''}"
+            data-player="${player}" data-idx="${i}" ${isEmpty ? 'disabled' : ''}>
+            ${isEmpty ? '' : tiles[idx]}
+            ${canMove ? '<span class="tile-hint">↔</span>' : ''}
+          </button>
+        `;
+      })
+      .join('');
+  }
+
   render() {
     if (this.screen === 'menu') this.renderMenu();
     else if (this.screen === 'play') this.renderPlay();
@@ -82,23 +104,27 @@ export class PuzzleRaceGame {
     this.container.innerHTML = `
       <div class="screen menu-screen">
         <div class="menu-bg"></div>
-        <div class="menu-content">
+        <div class="menu-content menu-wide">
           <div class="logo">🧩</div>
           <h1>Puzzle Balapan</h1>
-          <p class="subtitle">2 pemain · siapa selesai dulu!</p>
+          <p class="subtitle">2 pemain · siapa selesai dulu menang!</p>
+          <p class="pick-label">Pilih gambar:</p>
           <div class="puzzle-pick">
-            ${PUZZLES.map((p, i) => `
+            ${PUZZLES.map(
+              (p, i) => `
               <button class="puzzle-pick-btn ${this.puzzleIdx === i ? 'active' : ''}" data-puzzle="${i}">
-                ${p.tiles.slice(0, 4).join('')}<br><small>${p.name}</small>
+                <span class="pick-emojis">${p.tiles.slice(0, 4).join('')}</span>
+                <span class="pick-name">${p.name}</span>
               </button>
-            `).join('')}
+            `
+            ).join('')}
+          </div>
+          <div class="rules-box">
+            <div class="rule-item">👆 Ketuk ubin <strong>hijau</strong> (ada tanda ↔)</div>
+            <div class="rule-item">🔴 P1 atas/kiri · 🔵 P2 bawah/kanan</div>
           </div>
           <button class="btn btn-primary" data-action="start">Mulai Balapan!</button>
           <button class="btn btn-ghost" data-action="exit">← Kembali</button>
-          <div class="how-to">
-            <p>Ketuk ubin di samping kotak kosong</p>
-            <p>P1 kiri · P2 kanan — puzzle sama!</p>
-          </div>
         </div>
       </div>
     `;
@@ -111,21 +137,6 @@ export class PuzzleRaceGame {
     });
   }
 
-  renderBoard(player, board) {
-    const tiles = PUZZLES[this.puzzleIdx].tiles;
-    return board
-      .map((idx, i) => {
-        const isEmpty = idx === 8;
-        return `
-          <button class="puzzle-tile ${isEmpty ? 'empty' : ''}" data-player="${player}" data-idx="${i}"
-            ${isEmpty ? 'disabled' : ''}>
-            ${isEmpty ? '' : tiles[idx]}
-          </button>
-        `;
-      })
-      .join('');
-  }
-
   renderPlay() {
     const p = PUZZLES[this.puzzleIdx];
     this.container.innerHTML = `
@@ -134,16 +145,24 @@ export class PuzzleRaceGame {
           <button class="btn-icon" data-action="menu">←</button>
           <div class="level-info">
             <span class="level-badge puzzle-badge">Puzzle ${p.name}</span>
-            <span class="tier-label">Siapa duluan?</span>
+            <span class="tier-label">Susun gambar utuh!</span>
           </div>
         </header>
+        ${gameBanner('🏁', 'Siapa duluan susun puzzle = MENANG!', 'banner-puzzle')}
         <div class="puzzle-split">
           <div class="puzzle-side puzzle-p1">
-            <div class="puzzle-side-label" style="color:#ef4444">🔴 P1 · ${this.moves[0]} gerak</div>
+            <div class="puzzle-side-head">
+              <span class="puzzle-player-tag p1-tag">🔴 P1 · Merah</span>
+              <span class="puzzle-moves">${this.moves[0]} gerak</span>
+            </div>
             <div class="puzzle-grid">${this.renderBoard(0, this.boards[0])}</div>
           </div>
+          <div class="puzzle-divider"><span>VS</span></div>
           <div class="puzzle-side puzzle-p2">
-            <div class="puzzle-side-label" style="color:#3b82f6">🔵 P2 · ${this.moves[1]} gerak</div>
+            <div class="puzzle-side-head">
+              <span class="puzzle-player-tag p2-tag">🔵 P2 · Biru</span>
+              <span class="puzzle-moves">${this.moves[1]} gerak</span>
+            </div>
             <div class="puzzle-grid">${this.renderBoard(1, this.boards[1])}</div>
           </div>
         </div>
@@ -163,7 +182,7 @@ export class PuzzleRaceGame {
         <div class="win-content">
           <div class="win-icon">🏆</div>
           <h2>${name} Menang!</h2>
-          <p class="win-level">${this.moves[this.winner]} gerakan · ${elapsed}s</p>
+          <p class="win-level">${this.moves[this.winner]} gerakan · ${elapsed} detik</p>
           <button class="btn btn-primary" data-action="start">Balapan Lagi</button>
           <button class="btn btn-ghost" data-action="menu">Menu</button>
         </div>
@@ -176,8 +195,10 @@ export class PuzzleRaceGame {
     this.container.querySelectorAll('[data-action]').forEach((el) => {
       el.addEventListener('click', () => {
         if (el.dataset.action === 'start') this.startGame();
-        else if (el.dataset.action === 'menu') { this.screen = 'menu'; this.render(); }
-        else if (el.dataset.action === 'exit') this.onExit?.();
+        else if (el.dataset.action === 'menu') {
+          this.screen = 'menu';
+          this.render();
+        } else if (el.dataset.action === 'exit') this.onExit?.();
       });
     });
   }

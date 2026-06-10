@@ -9,64 +9,48 @@ export class App {
     if (this.currentGame?.destroy) this.currentGame.destroy();
     this.currentGame = null;
 
+    const games = [
+      { id: 'maze', icon: '🌀', title: 'Maze Quest', desc: '50 level labirin', cls: 'maze' },
+      { id: 'spot', icon: '🔍', title: 'Cari Beda', desc: 'Temukan perbedaan', cls: 'spot' },
+      { id: 'flip', icon: '🃏', title: 'Flip Match', desc: 'Cocokkan gambar', cls: 'flip' },
+      { id: 'chess', icon: '♟️', title: 'Catur Anak', desc: 'Usia 4–10 tahun', cls: 'chess' },
+      { id: 'ball', icon: '⚽', title: 'Tebak Bola', desc: '50 level', cls: 'ball' },
+      { id: 'balloon', icon: '🎈', title: 'Pop Balon', desc: 'Pop warna target', cls: 'balloon' },
+      { id: 'count', icon: '🔢', title: 'Hitung Benda', desc: 'Hitung emoji', cls: 'count' },
+      { id: 'star', icon: '⭐', title: 'Tangkap Bintang', desc: 'Tangkap bintang', cls: 'star' },
+      { id: 'whack', icon: '🐹', title: 'Asah Reflek', desc: 'Ketuk hewan cepat', cls: 'whack' },
+      { id: 'order', icon: '📊', title: 'Urut Angka', desc: '1, 2, 3...', cls: 'order' },
+      { id: 'snl', icon: '🐍', title: 'Ular Tangga', desc: 'Kotak 1–100', cls: 'snl', mp: '2-4' },
+      { id: 'race', icon: '🏎️', title: 'Balapan Mobil', desc: 'Balapan 800m', cls: 'race', mp: '2' },
+      { id: 'catch', icon: '🧺', title: 'Tangkap Benda', desc: 'Adu skor 60 detik', cls: 'catch', mp: '2' },
+      { id: 'puzzle', icon: '🧩', title: 'Puzzle Balapan', desc: 'Siapa selesai dulu', cls: 'puzzle', mp: '2' },
+      { id: 'simon', icon: '🎵', title: 'Simon Says', desc: 'Ikut pola warna', cls: 'simon', mp: '2-4' },
+    ];
+
     this.container.innerHTML = `
       <div class="screen hub-screen">
         <div class="menu-bg"></div>
         <div class="hub-content">
           <div class="hub-logo">🎮</div>
           <h1>Game Anak</h1>
-          <p class="subtitle">Pilih permainan favoritmu!</p>
+          <p class="subtitle">Ketuk game untuk main · ${games.length} permainan</p>
           <div class="game-cards">
-            <button class="game-card game-card-maze" data-game="maze">
-              <span class="game-card-icon">🌀</span>
-              <span class="game-card-title">Maze Quest</span>
-              <span class="game-card-desc">50 level labirin</span>
-            </button>
-            <button class="game-card game-card-spot" data-game="spot">
-              <span class="game-card-icon">🔍</span>
-              <span class="game-card-title">Cari Beda</span>
-              <span class="game-card-desc">Temukan perbedaan gambar</span>
-            </button>
-            <button class="game-card game-card-flip" data-game="flip">
-              <span class="game-card-icon">🃏</span>
-              <span class="game-card-title">Flip Match</span>
-              <span class="game-card-desc">Cocokkan gambar berpasangan</span>
-            </button>
-            <button class="game-card game-card-chess" data-game="chess">
-              <span class="game-card-icon">♟️</span>
-              <span class="game-card-title">Catur Anak</span>
-              <span class="game-card-desc">Catur sederhana usia 4–10 tahun</span>
-            </button>
-            <button class="game-card game-card-ball" data-game="ball">
-              <span class="game-card-icon">⚽</span>
-              <span class="game-card-title">Tebak Bola</span>
-              <span class="game-card-desc">50 level tebak posisi bola</span>
-            </button>
-            <button class="game-card game-card-snl" data-game="snl">
-              <span class="game-card-icon">🐍</span>
-              <span class="game-card-title">Ular Tangga</span>
-              <span class="game-card-desc">2–4 pemain · kotak 1–100</span>
-            </button>
-            <button class="game-card game-card-race" data-game="race">
-              <span class="game-card-icon">🏎️</span>
-              <span class="game-card-title">Balapan Mobil</span>
-              <span class="game-card-desc">2 pemain · HP & tablet</span>
-            </button>
-            <button class="game-card game-card-catch" data-game="catch">
-              <span class="game-card-icon">🧺</span>
-              <span class="game-card-title">Tangkap Benda</span>
-              <span class="game-card-desc">2 pemain · 60 detik</span>
-            </button>
-            <button class="game-card game-card-puzzle" data-game="puzzle">
-              <span class="game-card-icon">🧩</span>
-              <span class="game-card-title">Puzzle Balapan</span>
-              <span class="game-card-desc">2 pemain · siapa duluan</span>
-            </button>
-            <button class="game-card game-card-simon" data-game="simon">
-              <span class="game-card-icon">🎵</span>
-              <span class="game-card-title">Simon Says</span>
-              <span class="game-card-desc">2–4 pemain · ikut pola</span>
-            </button>
+            ${games
+              .map(
+                (g) => `
+              <button class="game-card game-card-${g.cls}" data-game="${g.id}">
+                <div class="game-card-row">
+                  <span class="game-card-icon">${g.icon}</span>
+                  <div class="game-card-text">
+                    <span class="game-card-title">${g.title}</span>
+                    <span class="game-card-desc">${g.desc}</span>
+                  </div>
+                  ${g.mp ? `<span class="mp-badge">${g.mp}P</span>` : ''}
+                </div>
+              </button>
+            `
+              )
+              .join('')}
           </div>
         </div>
       </div>
@@ -95,6 +79,21 @@ export class App {
     } else if (name === 'ball') {
       const { BallGuessGame } = await import('./ball-guess.js');
       this.currentGame = new BallGuessGame(this.container, () => this.showHub());
+    } else if (name === 'balloon') {
+      const { BalloonPopGame } = await import('./balloon-pop.js');
+      this.currentGame = new BalloonPopGame(this.container, () => this.showHub());
+    } else if (name === 'count') {
+      const { CountGame } = await import('./count-game.js');
+      this.currentGame = new CountGame(this.container, () => this.showHub());
+    } else if (name === 'star') {
+      const { StarCatchGame } = await import('./star-catch.js');
+      this.currentGame = new StarCatchGame(this.container, () => this.showHub());
+    } else if (name === 'whack') {
+      const { WhackGame } = await import('./whack-game.js');
+      this.currentGame = new WhackGame(this.container, () => this.showHub());
+    } else if (name === 'order') {
+      const { NumberOrderGame } = await import('./number-order.js');
+      this.currentGame = new NumberOrderGame(this.container, () => this.showHub());
     } else if (name === 'snl') {
       const { SnakesLaddersGame } = await import('./snakes-ladders.js');
       this.currentGame = new SnakesLaddersGame(this.container, () => this.showHub());

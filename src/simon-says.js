@@ -1,4 +1,5 @@
 import { PLAYER_SETUP } from './snakes-ladders-data.js';
+import { gameBanner } from './ui-helpers.js';
 
 const COLORS = [
   { id: 'red', emoji: '🔴', color: '#ef4444', sound: 261 },
@@ -163,17 +164,17 @@ export class SimonSaysGame {
     this.container.innerHTML = `
       <div class="screen menu-screen">
         <div class="menu-bg"></div>
-        <div class="menu-content">
+        <div class="menu-content menu-wide">
           <div class="logo">🎵</div>
           <h1>Simon Says</h1>
           <p class="subtitle">2–4 pemain · ikut pola warna!</p>
+          <div class="rules-box">
+            <div class="rule-item"><span>👀</span> Perhatikan urutan warna yang berkedip</div>
+            <div class="rule-item"><span>👆</span> Ulangi dengan ketuk warna yang sama</div>
+            <div class="rule-item"><span>❌</span> Salah = gugur · poin terbanyak menang!</div>
+          </div>
           <button class="btn btn-primary" data-action="setup">Mulai Main</button>
           <button class="btn btn-ghost" data-action="exit">← Kembali</button>
-          <div class="how-to">
-            <p>👀 Perhatikan urutan warna</p>
-            <p>👆 Ulangi pola dengan ketuk</p>
-            <p>Salah = gugur · poin terbanyak menang!</p>
-          </div>
         </div>
       </div>
     `;
@@ -226,16 +227,20 @@ export class SimonSaysGame {
             <span class="tier-label">Ronde ${this.round} · ${this.sequence.length} langkah</span>
           </div>
         </header>
-        <div class="simon-message">${this.message}</div>
+        <div class="simon-phase ${this.phase}">
+          <span class="simon-phase-icon">${this.phase === 'show' ? '👀' : this.phase === 'input' ? '👆' : this.phase === 'wrong' ? '❌' : '⏳'}</span>
+          <span class="simon-phase-text">${this.message}</span>
+        </div>
         <div class="simon-players">${zones}</div>
         <div class="simon-pad ${canTap ? 'active' : 'locked'}">
           ${COLORS.map((c, i) => `
             <button class="simon-btn" data-color="${i}" style="--sc:${c.color}" ${canTap ? '' : 'disabled'}>
               <span class="simon-emoji">${c.emoji}</span>
+              <span class="simon-color-name">${c.id === 'red' ? 'Merah' : c.id === 'blue' ? 'Biru' : c.id === 'green' ? 'Hijau' : 'Kuning'}</span>
             </button>
           `).join('')}
         </div>
-        <div class="simon-hint">${canTap ? '👆 Ketuk urutan yang sama!' : this.phase === 'show' ? '👀 Lihat...' : '⏳ Tunggu...'}</div>
+        ${gameBanner(canTap ? '👆' : '👀', canTap ? 'Ulangi urutan warna tadi!' : this.phase === 'show' ? 'Perhatikan urutan...' : 'Tunggu giliran...', canTap ? 'banner-active' : '')}
       </div>
     `;
 

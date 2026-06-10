@@ -1,5 +1,6 @@
+import { gameBanner, scoreBar, mpControls, bindSteer, setupCanvas } from './ui-helpers.js';
+
 const FINISH_DISTANCE = 800;
-const LANE_W = 0.42;
 
 export class CarRaceGame {
   constructor(container, onExit) {
@@ -128,93 +129,67 @@ export class CarRaceGame {
   }
 
   draw() {
-    const canvas = this.container.querySelector('.race-canvas');
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    const w = canvas.width;
-    const h = canvas.height;
+    if (!this.ctx) return;
+    const { ctx, w, h } = this;
 
     ctx.clearRect(0, 0, w, h);
-
     ctx.fillStyle = '#1e293b';
     ctx.fillRect(0, 0, w, h);
 
+    ctx.fillStyle = 'rgba(239,68,68,0.1)';
+    ctx.fillRect(0, 0, w * 0.5, h);
+    ctx.fillStyle = 'rgba(59,130,246,0.1)';
+    ctx.fillRect(w * 0.5, 0, w * 0.5, h);
+
     const scrollOff = ((this.cars[0].dist + this.cars[1].dist) * 0.15) % 40;
-    ctx.strokeStyle = '#334155';
+    ctx.strokeStyle = 'rgba(255,255,255,0.25)';
     ctx.lineWidth = 2;
+    ctx.setLineDash([12, 12]);
+    ctx.beginPath();
+    ctx.moveTo(w * 0.5, 0);
+    ctx.lineTo(w * 0.5, h);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
     for (let y = -40 + scrollOff; y < h; y += 40) {
+      ctx.strokeStyle = '#475569';
       ctx.beginPath();
       ctx.moveTo(w * 0.5, y);
       ctx.lineTo(w * 0.5, y + 20);
       ctx.stroke();
     }
 
-    ctx.fillStyle = '#374151';
-    ctx.fillRect(0, 0, w * 0.04, h);
-    ctx.fillRect(w * 0.46, 0, w * 0.08, h);
-    ctx.fillRect(w * 0.96, 0, w * 0.04, h);
-
-    ctx.fillStyle = '#475569';
-    ctx.font = 'bold 11px system-ui';
+    ctx.font = 'bold 12px system-ui';
     ctx.textAlign = 'center';
-    ctx.fillText('P1', w * 0.25, 18);
-    ctx.fillText('P2', w * 0.75, 18);
+    ctx.fillStyle = '#fca5a5';
+    ctx.fillText('JALUR MERAH', w * 0.25, 22);
+    ctx.fillStyle = '#93c5fd';
+    ctx.fillText('JALUR BIRU', w * 0.75, 22);
 
+    const itemSz = Math.min(w * 0.09, 44);
     this.obstacles.forEach((o) => {
-      ctx.font = `${Math.floor(w * 0.08)}px serif`;
-      ctx.textAlign = 'center';
+      ctx.font = `${itemSz}px serif`;
       ctx.fillText(o.emoji, o.x * w, o.y * h);
     });
 
     this.cars.forEach((car) => {
-      ctx.font = `${Math.floor(w * 0.1)}px serif`;
-      ctx.textAlign = 'center';
-      ctx.fillText(car.emoji, car.x * w, car.y * h);
-
-      const barW = w * 0.35;
-      const barX = (car.id === 0 ? 0.08 : 0.58) * w;
-      const progress = car.dist / FINISH_DISTANCE;
-      ctx.fillStyle = '#334155';
-      ctx.fillRect(barX, h - 12, barW, 6);
-      ctx.fillStyle = car.color;
-      ctx.fillRect(barX, h - 12, barW * progress, 6);
+      ctx.font = `${Math.min(w * 0.12, 52)}px serif`;
+      ctx.fillText(car.emoji, car.x * w, h * 0.82);
     });
 
-    const hud = this.container.querySelector('.race-hud-dist');
-    if (hud) {
-      hud.innerHTML = this.cars
-        .map((c) => `<span style="color:${c.color}">${c.emoji} ${Math.floor(c.dist)}m</span>`)
-        .join(' · ');
+    const bar = this.container.querySelector('.score-bar');
+    if (bar) {
+      bar.innerHTML = this.cars
+        .map(
+          (c) => `
+        <div class="score-item" style="--pc:${c.color}">
+          <span class="score-emoji">${c.emoji}</span>
+          <span class="score-name">${c.name}</span>
+          <span class="score-val">${Math.floor(c.dist)}m</span>
+        </div>`
+        )
+        .join('');
     }
-  }
-
-  bindTouchControls() {
-    const setKey = (key, val) => {
-      this.keys[key] = val;
-    };
-
-    this.container.querySelectorAll('[data-steer]').forEach((btn) => {
-      const [player, dir] = btn.dataset.steer.split('-');
-      const key = player === '1' ? (dir === 'l' ? 'p1L' : 'p1R') : dir === 'l' ? 'p2L' : 'p2R';
-
-      const start = (e) => {
-        e.preventDefault();
-        setKey(key, true);
-        btn.classList.add('pressed');
-      };
-      const end = (e) => {
-        e.preventDefault();
-        setKey(key, false);
-        btn.classList.remove('pressed');
-      };
-
-      btn.addEventListener('touchstart', start, { passive: false });
-      btn.addEventListener('touchend', end, { passive: false });
-      btn.addEventListener('touchcancel', end, { passive: false });
-      btn.addEventListener('mousedown', start);
-      btn.addEventListener('mouseup', end);
-      btn.addEventListener('mouseleave', end);
-    });
   }
 
   render() {
@@ -227,17 +202,17 @@ export class CarRaceGame {
     this.container.innerHTML = `
       <div class="screen menu-screen">
         <div class="menu-bg"></div>
-        <div class="menu-content">
+        <div class="menu-content menu-wide">
           <div class="logo">🏎️</div>
           <h1>Balapan Mobil</h1>
           <p class="subtitle">2 pemain · HP & tablet</p>
+          <div class="rules-box">
+            <div class="rule-item"><span>🏎️</span> P1 Merah — tombol <strong>kiri</strong> layar</div>
+            <div class="rule-item"><span>🚙</span> P2 Biru — tombol <strong>kanan</strong> layar</div>
+            <div class="rule-item"><span>🏁</span> Hindari rintangan · pertama <strong>800m</strong> menang!</div>
+          </div>
           <button class="btn btn-primary" data-action="start">Mulai Balapan!</button>
           <button class="btn btn-ghost" data-action="exit">← Kembali ke Menu</button>
-          <div class="how-to">
-            <p>🏎️ P1 (Merah): tombol kiri layar atau A/D</p>
-            <p>🚙 P2 (Biru): tombol kanan layar atau ←/→</p>
-            <p>🏁 Hindari rintangan · pertama 800m menang!</p>
-          </div>
         </div>
       </div>
     `;
@@ -247,52 +222,45 @@ export class CarRaceGame {
   renderPlay() {
     this.container.innerHTML = `
       <div class="screen race-play-screen">
-        <header class="top-bar race-top">
+        <header class="top-bar">
           <button class="btn-icon" data-action="menu">←</button>
           <div class="level-info">
             <span class="level-badge race-badge">Balapan 2P</span>
-            <span class="tier-label race-hud-dist">0m · 0m</span>
+            <span class="tier-label">Target 🏁 800m</span>
           </div>
         </header>
+        ${scoreBar(
+          this.cars.map((c) => ({
+            emoji: c.emoji,
+            name: c.name,
+            color: c.color,
+            value: `${Math.floor(c.dist)}`,
+            unit: 'm',
+          }))
+        )}
+        ${gameBanner('🏎️', 'Geser mobil ◀ ▶ hindari rintangan!', 'banner-race')}
         <div class="race-canvas-wrap">
           <canvas class="race-canvas"></canvas>
         </div>
-        <div class="race-controls">
-          <div class="race-control-side race-p1">
-            <span class="race-player-label">🏎️ P1</span>
-            <div class="race-btns">
-              <button class="race-steer-btn" data-steer="1-l">◀</button>
-              <button class="race-steer-btn" data-steer="1-r">▶</button>
-            </div>
-          </div>
-          <div class="race-finish-label">🏁 800m</div>
-          <div class="race-control-side race-p2">
-            <span class="race-player-label">🚙 P2</span>
-            <div class="race-btns">
-              <button class="race-steer-btn" data-steer="2-l">◀</button>
-              <button class="race-steer-btn" data-steer="2-r">▶</button>
-            </div>
-          </div>
-        </div>
+        ${mpControls('🏎️ Merah', '🚙 Biru', '🏁 800m')}
       </div>
     `;
 
     const canvas = this.container.querySelector('.race-canvas');
     const wrap = this.container.querySelector('.race-canvas-wrap');
     const resize = () => {
-      const rect = wrap.getBoundingClientRect();
-      canvas.width = rect.width * devicePixelRatio;
-      canvas.height = rect.height * devicePixelRatio;
-      canvas.style.width = `${rect.width}px`;
-      canvas.style.height = `${rect.height}px`;
-      const ctx = canvas.getContext('2d');
-      ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+      const setup = setupCanvas(wrap, canvas);
+      this.ctx = setup.ctx;
+      this.w = setup.w;
+      this.h = setup.h;
       this.draw();
     };
     resize();
     this._resize = resize;
     window.addEventListener('resize', resize);
-    this.bindTouchControls();
+    bindSteer(this.container, this.keys, (p, d) =>
+      p === '1' ? (d === 'l' ? 'p1L' : 'p1R') : d === 'l' ? 'p2L' : 'p2R'
+    );
     this.bindActions();
     this.draw();
   }
