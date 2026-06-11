@@ -597,6 +597,15 @@ body {
 .game-card-whack { border-left: 4px solid #84cc16; }
 .game-card-order { border-left: 4px solid #8b5cf6; }
 .game-card-getrich { border-left: 4px solid #f59e0b; }
+.game-card-trace { border-left: 4px solid #22c55e; }
+.game-card-squid { border-left: 4px solid #ec4899; }
+
+.pwa-hint {
+  font-size: 0.75rem;
+  color: #86efac;
+  margin-top: 8px;
+  font-weight: 600;
+}
 
 .game-card-icon {
   font-size: 1.6rem;
@@ -2984,6 +2993,44 @@ body {
   letter-spacing: 0.08em;
 }
 
+.gr-center-pool {
+  font-size: 0.55rem;
+  font-weight: 700;
+  color: #86efac;
+}
+
+.gr-level {
+  position: absolute;
+  bottom: 1px;
+  left: 2px;
+  font-size: 0.4rem;
+  font-weight: 800;
+  color: #fbbf24;
+}
+
+.gr-toast {
+  text-align: center;
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  animation: toast-in 0.3s ease;
+  flex-shrink: 0;
+}
+
+.gr-toast-good { color: #86efac; background: rgba(34,197,94,0.15); }
+.gr-toast-bad { color: #fca5a5; background: rgba(239,68,68,0.15); }
+.gr-toast-warn { color: #fcd34d; background: rgba(234,179,8,0.15); }
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.gr-overlay-card.upgrade { border: 3px solid #3b82f6; }
+.gr-mono-hint { color: #a855f7 !important; font-weight: 700 !important; }
+
+.gr-cell.gr-free_parking { background: #14532d; border-color: #22c55e; }
+
 .gr-cell {
   position: relative;
   background: var(--surface);
@@ -3192,3 +3239,188 @@ body {
     display: none;
   }
 }
+
+/* ── Ngegarisin ── */
+.trace-play-screen { overflow: hidden; }
+.trace-badge { background: #22c55e; }
+
+.trace-hint {
+  text-align: center;
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.trace-canvas-wrap {
+  flex: 1;
+  min-height: 0;
+  touch-action: none;
+}
+
+.trace-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+
+.trace-actions {
+  display: flex;
+  gap: 10px;
+  padding: 12px 16px;
+  padding-bottom: calc(12px + var(--safe-bottom));
+  flex-shrink: 0;
+}
+
+.trace-actions .btn {
+  flex: 1;
+  margin: 0;
+}
+
+/* ── Mugunghwa (Red Light Green Light) ── */
+.squid-play-screen {
+  overflow: hidden;
+  position: relative;
+  transition: background 0.4s;
+}
+
+.squid-play-screen.phase-green { background: #052e16; }
+.squid-play-screen.phase-red { background: #450a0a; }
+
+.squid-badge { background: #ec4899; }
+
+.squid-light-indicator {
+  text-align: center;
+  padding: 12px 16px;
+  font-size: clamp(1rem, 4vw, 1.2rem);
+  font-weight: 900;
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
+}
+
+.squid-light-indicator.phase-green {
+  color: #86efac;
+  background: rgba(34, 197, 94, 0.2);
+  animation: squid-pulse-green 1s ease infinite;
+}
+
+.squid-light-indicator.phase-red {
+  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.25);
+  animation: squid-pulse-red 0.5s ease infinite;
+}
+
+@keyframes squid-pulse-green {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.75; }
+}
+
+@keyframes squid-pulse-red {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+.squid-message {
+  text-align: center;
+  padding: 4px 12px 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.squid-canvas-wrap {
+  flex: 1;
+  min-height: 0;
+}
+
+.squid-controls {
+  display: grid;
+  grid-template-columns: repeat(var(--squid-cols, 2), 1fr);
+  gap: 8px;
+  padding: 10px 12px;
+  padding-bottom: calc(10px + var(--safe-bottom));
+  background: var(--surface);
+  border-top: 1px solid var(--surface2);
+  flex-shrink: 0;
+}
+
+.squid-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 8px;
+  border-radius: 12px;
+  border: 2px solid var(--surface2);
+  background: color-mix(in srgb, var(--pc) 8%, var(--bg));
+}
+
+.squid-zone.out { opacity: 0.35; }
+
+.squid-zone-label {
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.squid-forward-btn {
+  width: 100%;
+  min-height: var(--touch-min);
+  border: 2px solid var(--pc);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--pc) 20%, var(--surface));
+  color: var(--text);
+  font-size: 1.2rem;
+  font-weight: 900;
+  cursor: pointer;
+  line-height: 1.2;
+}
+
+.squid-forward-btn small {
+  font-size: 0.55rem;
+  font-weight: 700;
+}
+
+.squid-forward-btn.pressed,
+.squid-forward-btn:active:not(:disabled) {
+  background: var(--pc);
+  transform: scale(0.96);
+}
+
+.squid-forward-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.squid-progress {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.squid-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: 20px;
+}
+
+.squid-overlay-card {
+  background: var(--surface);
+  border: 2px solid #ec4899;
+  border-radius: 16px;
+  padding: 28px 24px;
+  text-align: center;
+  max-width: 320px;
+  width: 100%;
+}
+
+.squid-overlay-icon { font-size: 3.5rem; margin-bottom: 8px; }
+.squid-overlay-card h3 { font-size: 1.3rem; font-weight: 800; margin-bottom: 8px; }
+.squid-overlay-card p { color: var(--muted); margin-bottom: 16px; }

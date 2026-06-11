@@ -26,6 +26,8 @@ export class App {
       { id: 'puzzle', icon: '🧩', title: 'Puzzle Balapan', desc: 'Siapa selesai dulu', cls: 'puzzle', mp: '2' },
       { id: 'simon', icon: '🎵', title: 'Simon Says', desc: 'Ikut pola warna', cls: 'simon', mp: '2-4' },
       { id: 'getrich', icon: '💰', title: 'Kaya Raya', desc: 'Monopoli Get Rich', cls: 'getrich', mp: '2-4' },
+      { id: 'trace', icon: '✏️', title: 'Ngegarisin', desc: 'Ikuti garis putus', cls: 'trace' },
+      { id: 'squid', icon: '🌸', title: 'Mugunghwa', desc: 'Lampu merah/hijau', cls: 'squid', mp: '2-4' },
     ];
 
     this.container.innerHTML = `
@@ -35,6 +37,7 @@ export class App {
           <div class="hub-logo">🎮</div>
           <h1>Game Anak</h1>
           <p class="subtitle">Ketuk game untuk main · ${games.length} permainan</p>
+          <p class="pwa-hint" id="pwa-hint">📲 Bisa di-install ke layar HP</p>
           <div class="game-cards">
             ${games
               .map(
@@ -113,6 +116,12 @@ export class App {
     } else if (name === 'getrich') {
       const { GetRichGame } = await import('./get-rich.js');
       this.currentGame = new GetRichGame(this.container, () => this.showHub());
+    } else if (name === 'trace') {
+      const { TraceLinesGame } = await import('./trace-lines.js');
+      this.currentGame = new TraceLinesGame(this.container, () => this.showHub());
+    } else if (name === 'squid') {
+      const { SquidLightGame } = await import('./squid-light.js');
+      this.currentGame = new SquidLightGame(this.container, () => this.showHub());
     }
   }
 }
