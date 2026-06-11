@@ -596,6 +596,7 @@ body {
 .game-card-star { border-left: 4px solid #fbbf24; }
 .game-card-whack { border-left: 4px solid #84cc16; }
 .game-card-order { border-left: 4px solid #8b5cf6; }
+.game-card-getrich { border-left: 4px solid #f59e0b; }
 
 .game-card-icon {
   font-size: 1.6rem;
@@ -978,6 +979,70 @@ body {
   font-size: 0.75rem;
   color: var(--muted);
   flex-shrink: 0;
+}
+
+.chess-cell.in-check {
+  box-shadow: inset 0 0 0 4px #ef4444;
+  animation: chess-check-pulse 0.8s ease infinite;
+}
+
+@keyframes chess-check-pulse {
+  0%, 100% { box-shadow: inset 0 0 0 4px #ef4444; }
+  50% { box-shadow: inset 0 0 0 6px #f87171; }
+}
+
+.chess-check-banner {
+  text-align: center;
+  padding: 8px 16px;
+  background: rgba(239, 68, 68, 0.2);
+  border-bottom: 2px solid #ef4444;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #fca5a5;
+  flex-shrink: 0;
+  animation: chess-check-pulse 1s ease infinite;
+}
+
+.chess-play-screen {
+  position: relative;
+}
+
+.chess-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: 20px;
+}
+
+.chess-overlay-card {
+  background: var(--surface);
+  border: 2px solid var(--surface2);
+  border-radius: 16px;
+  padding: 28px 24px;
+  text-align: center;
+  max-width: 320px;
+  width: 100%;
+}
+
+.chess-overlay-icon {
+  font-size: 3.5rem;
+  margin-bottom: 8px;
+}
+
+.chess-overlay-card h3 {
+  font-size: 1.3rem;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.chess-overlay-card p {
+  color: var(--muted);
+  margin-bottom: 20px;
+  line-height: 1.4;
 }
 
 /* ── Ball Guess ── */
@@ -1496,9 +1561,28 @@ body {
   cursor: not-allowed;
 }
 
+.snl-dice-pair {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  justify-content: center;
+}
+
+.snl-dice-sum {
+  font-size: 0.85rem;
+  font-weight: 900;
+  color: rgba(255, 255, 255, 0.9);
+  margin-left: 2px;
+}
+
 .snl-dice-face {
-  font-size: 1.8rem;
+  font-size: 1.5rem;
   line-height: 1;
+}
+
+.snl-dice-face-1,
+.snl-dice-face-2 {
+  font-size: 1.4rem;
 }
 
 .snl-dice-face.dice-roll,
@@ -2797,4 +2881,314 @@ body {
 .order-tile:not(.done):active {
   transform: scale(0.94);
   background: rgba(139, 92, 246, 0.35);
+}
+
+/* ── Kaya Raya (Monopoly) ── */
+.gr-play-screen { overflow: hidden; position: relative; }
+.gr-badge { background: #f59e0b; }
+
+.gr-players-bar {
+  display: flex;
+  gap: 6px;
+  padding: 8px 10px;
+  overflow-x: auto;
+  flex-shrink: 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+.gr-player-chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 2px solid var(--surface2);
+  font-size: 0.7rem;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
+.gr-player-chip.active {
+  opacity: 1;
+  border-color: var(--pc);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--pc) 30%, transparent);
+}
+
+.gr-player-chip.out {
+  opacity: 0.3;
+  text-decoration: line-through;
+}
+
+.gr-chip-money {
+  background: color-mix(in srgb, var(--pc) 20%, var(--bg));
+  padding: 2px 6px;
+  border-radius: 999px;
+  font-size: 0.65rem;
+}
+
+.gr-jail-tag { font-size: 0.7rem; }
+
+.gr-message {
+  text-align: center;
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.gr-board-scroll {
+  flex: 1;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 8px;
+  min-height: 0;
+}
+
+.gr-board {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(6, 1fr);
+  gap: 3px;
+  width: min(100%, 520px);
+  margin: 0 auto;
+  aspect-ratio: 8 / 6;
+  position: relative;
+  background: #1a2744;
+  border-radius: 12px;
+  padding: 3px;
+  border: 3px solid #f59e0b;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.gr-center {
+  grid-row: 2 / 6;
+  grid-column: 2 / 8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1e293b, #0f172a);
+  border-radius: 8px;
+  gap: 4px;
+}
+
+.gr-center-logo { font-size: 2rem; }
+.gr-center-title {
+  font-size: 0.7rem;
+  font-weight: 900;
+  color: #fbbf24;
+  letter-spacing: 0.08em;
+}
+
+.gr-cell {
+  position: relative;
+  background: var(--surface);
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  min-height: 0;
+  min-width: 0;
+  border: 1px solid var(--surface2);
+  overflow: hidden;
+}
+
+.gr-cell.gr-property {
+  background: color-mix(in srgb, var(--tc) 25%, var(--surface));
+  border-color: color-mix(in srgb, var(--tc) 50%, transparent);
+}
+
+.gr-cell.gr-start { background: #166534; border-color: #22c55e; }
+.gr-cell.gr-chance { background: #4c1d95; border-color: #a855f7; }
+.gr-cell.gr-tax { background: #7f1d1d; border-color: #ef4444; }
+.gr-cell.gr-jail { background: #374151; }
+.gr-cell.gr-go_jail { background: #1e3a5f; border-color: #3b82f6; }
+
+.gr-cell.gr-current {
+  box-shadow: 0 0 0 2px #fbbf24;
+  z-index: 2;
+}
+
+.gr-cell-emoji {
+  font-size: clamp(0.7rem, 3vw, 1rem);
+  line-height: 1;
+}
+
+.gr-cell-name {
+  font-size: clamp(0.35rem, 1.5vw, 0.5rem);
+  font-weight: 800;
+  text-align: center;
+  line-height: 1.1;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.gr-cell-price {
+  font-size: 0.4rem;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.gr-owner {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  font-size: 0.45rem;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.gr-tokens {
+  position: absolute;
+  bottom: 1px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 1px;
+}
+
+.gr-token {
+  font-size: clamp(0.5rem, 2vw, 0.7rem);
+  line-height: 1;
+  filter: drop-shadow(0 1px 1px rgba(0,0,0,0.5));
+}
+
+.gr-dice-bar {
+  padding: 10px 12px;
+  padding-bottom: calc(10px + var(--safe-bottom));
+  background: var(--surface);
+  border-top: 1px solid var(--surface2);
+  flex-shrink: 0;
+}
+
+.gr-dice-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 12px;
+  border: 2px solid var(--surface2);
+  opacity: 0.5;
+}
+
+.gr-dice-zone.active {
+  opacity: 1;
+  border-color: var(--pc);
+  background: color-mix(in srgb, var(--pc) 8%, var(--bg));
+}
+
+.gr-dice-player {
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.gr-roll-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  font-weight: 800;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.gr-roll-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.gr-roll-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.gr-wait {
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-weight: 700;
+  padding: 12px;
+}
+
+.gr-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: 20px;
+}
+
+.gr-overlay-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px 20px;
+  text-align: center;
+  max-width: 320px;
+  width: 100%;
+  color: #0f172a;
+  animation: card-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.gr-overlay-card.buy { border: 3px solid #22c55e; }
+.gr-overlay-card.chance { border: 3px solid #a855f7; }
+.gr-overlay-card.win { border: 3px solid #f59e0b; }
+
+.gr-overlay-emoji {
+  font-size: 3rem;
+  margin-bottom: 8px;
+}
+
+.gr-overlay-card h3 {
+  font-size: 1.2rem;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.gr-overlay-card p {
+  font-size: 0.9rem;
+  color: #475569;
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.gr-balance {
+  font-weight: 800;
+  color: #0f172a !important;
+  margin-bottom: 16px !important;
+}
+
+.gr-overlay-card .btn {
+  margin-bottom: 8px;
+}
+
+@media (max-width: 380px) {
+  .gr-board {
+    width: 100%;
+  }
+
+  .gr-cell-name {
+    display: none;
+  }
 }

@@ -17,7 +17,9 @@ export class SnakesLaddersGame {
     this.playerCount = 2;
     this.players = [];
     this.currentPlayer = 0;
-    this.dice = 1;
+    this.dice1 = 1;
+    this.dice2 = 1;
+    this.dice = 2;
     this.rolling = false;
     this.moving = false;
     this.message = '';
@@ -50,12 +52,16 @@ export class SnakesLaddersGame {
     this.render();
 
     for (let i = 0; i < 14; i++) {
-      this.dice = 1 + Math.floor(Math.random() * 6);
+      this.dice1 = 1 + Math.floor(Math.random() * 6);
+      this.dice2 = 1 + Math.floor(Math.random() * 6);
+      this.dice = this.dice1 + this.dice2;
       this.updateDiceDisplay();
       await sleep(70 + i * 10);
     }
 
-    this.dice = 1 + Math.floor(Math.random() * 6);
+    this.dice1 = 1 + Math.floor(Math.random() * 6);
+    this.dice2 = 1 + Math.floor(Math.random() * 6);
+    this.dice = this.dice1 + this.dice2;
     this.rolling = false;
     this.render();
     await sleep(350);
@@ -63,13 +69,17 @@ export class SnakesLaddersGame {
   }
 
   updateDiceDisplay() {
-    const el = this.container.querySelector('.snl-dice-face');
-    if (el) {
-      el.textContent = DICE_EMOJI[this.dice];
+    const d1 = this.container.querySelector('.snl-dice-face-1');
+    const d2 = this.container.querySelector('.snl-dice-face-2');
+    const sum = this.container.querySelector('.snl-dice-sum');
+    [d1, d2].forEach((el, i) => {
+      if (!el) return;
+      el.textContent = DICE_EMOJI[i === 0 ? this.dice1 : this.dice2];
       el.classList.remove('dice-roll');
       void el.offsetWidth;
       el.classList.add('dice-roll');
-    }
+    });
+    if (sum) sum.textContent = `= ${this.dice}`;
   }
 
   async walkCells(player, from, to, stepMs) {
@@ -239,7 +249,11 @@ export class SnakesLaddersGame {
                     ? `
                   <button class="snl-dice-btn ${canRoll && !this.rolling ? '' : 'disabled'}"
                     data-action="roll" ${canRoll && !this.rolling ? '' : 'disabled'}>
-                    <span class="snl-dice-face ${this.rolling ? 'dice-rolling' : ''}">${DICE_EMOJI[this.dice]}</span>
+                    <div class="snl-dice-pair">
+                      <span class="snl-dice-face snl-dice-face-1 ${this.rolling ? 'dice-rolling' : ''}">${DICE_EMOJI[this.dice1]}</span>
+                      <span class="snl-dice-face snl-dice-face-2 ${this.rolling ? 'dice-rolling' : ''}">${DICE_EMOJI[this.dice2]}</span>
+                      <span class="snl-dice-sum">= ${this.dice}</span>
+                    </div>
                     <span class="snl-dice-label">${label}</span>
                   </button>
                 `
@@ -275,7 +289,7 @@ export class SnakesLaddersGame {
           <button class="btn btn-primary" data-action="setup">Mulai Main</button>
           <button class="btn btn-ghost" data-action="exit">← Kembali ke Menu</button>
           <div class="how-to">
-            <p>🎲 Dadu pindah ke pemain yang giliran</p>
+            <p>🎲🎲 Lempar 2 dadu (2–12 langkah)</p>
             <p>🪜 Naik tangga · 🐍 hindari ular</p>
             <p>⭐ Banyak kotak bintang = tantangan seru!</p>
           </div>

@@ -33,6 +33,8 @@ export class KidsChessGame {
     this.selected = null;
     this.turn = 'w';
     this.message = '';
+    this.gameOver = null;
+    this.inCheck = null;
     this.render();
   }
 
@@ -41,6 +43,8 @@ export class KidsChessGame {
     this.selected = null;
     this.turn = 'w';
     this.message = '';
+    this.gameOver = null;
+    this.inCheck = null;
     this.render();
   }
 
@@ -56,23 +60,24 @@ export class KidsChessGame {
     return piece ? PIECES[piece]?.color : null;
   }
 
-  /** Gerakan sederhana untuk anak — tidak full rules catur */
-  getKidMoves(row, col, piece) {
+  findKing(color, board = this.board) {
+    const king = color === 'w' ? 'wK' : 'bK';
+    for (let r = 0; r < 8; r++) {
+      for (let c = 0; c < 8; c++) {
+        if (board[r][c] === king) return [r, c];
+      }
+    }
+    return null;
+  }
+
+  getRawMoves(row, col, piece, board = this.board) {
     const moves = [];
     const type = piece.slice(1);
     const color = this.pieceColor(piece);
-    const dirs = {
-      K: [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [-1, 1], [1, -1], [1, 1]],
-      Q: [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [-1, 1], [1, -1], [1, 1]],
-      R: [[-1, 0], [1, 0], [0, -1], [0, 1]],
-      B: [[-1, -1], [-1, 1], [1, -1], [1, 1]],
-      N: [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]],
-      P: color === 'w' ? [[-1, 0], [-2, 0]] : [[1, 0], [2, 0]],
-    };
 
-    const addTarget = (r, c, slide = false, dir = null) => {
+    const addTarget = (r, c, slide = false) => {
       if (r < 0 || r > 7 || c < 0 || c > 7) return slide ? 'stop' : null;
-      const target = this.board[r][c];
+      const target = board[r][c];
       if (!target) {
         moves.push([r, c]);
         return slide ? 'continue' : null;
@@ -84,9 +89,9 @@ export class KidsChessGame {
     if (type === 'P') {
       const forward = color === 'w' ? -1 : 1;
       const startRow = color === 'w' ? 6 : 1;
-      if (this.isEmpty(row + forward, col)) {
+      if (this.isEmptyOn(row + forward, col, board)) {
         moves.push([row + forward, col]);
-        if (row === startRow && this.isEmpty(row + forward * 2, col)) {
+        if (row === startRow && this.isEmptyOn(row + forward * 2, col, board)) {
           moves.push([row + forward * 2, col]);
         }
       }
@@ -94,7 +99,7 @@ export class KidsChessGame {
         const r = row + forward;
         const c = col + dc;
         if (r >= 0 && r < 8 && c >= 0 && c < 8) {
-          const target = this.board[r][c];
+          const target = board[r][c];
           if (target && this.pieceColor(target) !== color) moves.push([r, c]);
         }
       }
@@ -102,16 +107,26 @@ export class KidsChessGame {
     }
 
     if (type === 'N') {
-      for (const [dr, dc] of dirs.N) addTarget(row + dr, col + dc);
+      for (const [dr, dc] of [[-2, -1], [-2, 1], [-1, -2], [-1, 2], [1, -2], [1, 2], [2, -1], [2, 1]]) {
+        addTarget(row + dr, col + dc);
+      }
       return moves;
     }
 
     if (type === 'K') {
-      for (const [dr, dc] of dirs.K) addTarget(row + dr, col + dc);
+      for (const [dr, dc] of [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [-1, 1], [1, -1], [1, 1]]) {
+        addTarget(row + dr, col + dc);
+      }
       return moves;
     }
 
-    const lineDirs = type === 'Q' ? dirs.Q : type === 'R' ? dirs.R : dirs.B;
+    const lineDirs =
+      type === 'Q'
+        ? [[-1, 0], [1, 0], [0, -1], [0, 1], [-1, -1], [-1, 1], [1, -1], [1, 1]]
+        : type === 'R'
+          ? [[-1, 0], [1, 0], [0, -1], [0, 1]]
+          : [[-1, -1], [-1, 1], [1, -1], [1, 1]];
+
     for (const [dr, dc] of lineDirs) {
       let r = row + dr;
       let c = col + dc;
@@ -125,11 +140,65 @@ export class KidsChessGame {
     return moves;
   }
 
+  isEmptyOn(row, col, board) {
+    return row >= 0 && row < 8 && col >= 0 && col < 8 && !board[row][col];
+  }
+
+  applyMove(board, fromR, fromC, toR, toC) {
+    const next = board.map((row) => [...row]);
+    next[toR][toC] = next[fromR][fromC];
+    next[fromR][fromC] = null;
+    return next;
+  }
+
+  isSquareAttacked(row, col, byColor, board = this.board) {
+    for (let r = 0; r < 8; r++) {
+      for (let c = 0; c < 8; c++) {
+        const piece = board[r][c];
+        if (!piece || this.pieceColor(piece) !== byColor) continue;
+        const moves = this.getRawMoves(r, c, piece, board);
+        if (moves.some(([mr, mc]) => mr === row && mc === col)) return true;
+      }
+    }
+    return false;
+  }
+
+  isInCheck(color, board = this.board) {
+    const king = this.findKing(color, board);
+    if (!king) return true;
+    const opp = color === 'w' ? 'b' : 'w';
+    return this.isSquareAttacked(king[0], king[1], opp, board);
+  }
+
+  getLegalMoves(row, col, board = this.board) {
+    const piece = board[row][col];
+    if (!piece) return [];
+    const color = this.pieceColor(piece);
+    return this.getRawMoves(row, col, piece, board).filter(([toR, toC]) => {
+      const next = this.applyMove(board, row, col, toR, toC);
+      return !this.isInCheck(color, next);
+    });
+  }
+
+  hasAnyLegalMove(color, board = this.board) {
+    for (let r = 0; r < 8; r++) {
+      for (let c = 0; c < 8; c++) {
+        const piece = board[r][c];
+        if (piece && this.pieceColor(piece) === color) {
+          if (this.getLegalMoves(r, c, board).length > 0) return true;
+        }
+      }
+    }
+    return false;
+  }
+
   onSquareClick(row, col) {
+    if (this.gameOver) return;
+
     const piece = this.board[row][col];
     if (this.selected) {
       const [sr, sc] = this.selected;
-      const moves = this.getKidMoves(sr, sc, this.board[sr][sc]);
+      const moves = this.getLegalMoves(sr, sc);
       const isMove = moves.some(([r, c]) => r === row && c === col);
       if (isMove) {
         const moving = this.board[sr][sc];
@@ -137,10 +206,47 @@ export class KidsChessGame {
         this.board[row][col] = moving;
         this.board[sr][sc] = null;
         this.selected = null;
-        this.turn = this.turn === 'w' ? 'b' : 'w';
-        this.message = captured
+        const nextTurn = this.turn === 'w' ? 'b' : 'w';
+
+        if (captured === 'wK' || captured === 'bK') {
+          this.gameOver = { winner: this.turn, reason: 'king' };
+          this.message = `👑 SKAK MAT! ${PIECES[moving].name} menang!`;
+          this.render();
+          return;
+        }
+
+        let msg = captured
           ? `${PIECES[moving].name} makan ${PIECES[captured].name}!`
           : `${PIECES[moving].name} pindah ✓`;
+
+        if (captured === 'wQ' || captured === 'bQ') {
+          msg = `💥 RATU DIMANGSA! ${PIECES[moving].emoji} makan ${PIECES[captured].emoji} ${PIECES[captured].name}!`;
+        }
+
+        this.turn = nextTurn;
+
+        if (!this.findKing(this.turn)) {
+          this.gameOver = { winner: this.turn === 'w' ? 'b' : 'w', reason: 'king' };
+          this.message = '🏆 Raja lawan tertangkap — MENANG!';
+          this.render();
+          return;
+        }
+
+        const opponentInCheck = this.isInCheck(this.turn);
+        this.inCheck = opponentInCheck ? this.turn : null;
+
+        if (opponentInCheck && !this.hasAnyLegalMove(this.turn)) {
+          this.gameOver = { winner: this.turn === 'w' ? 'b' : 'w', reason: 'checkmate' };
+          this.message = `♟️ SKAK MAT! ${this.turn === 'w' ? '⚪ Putih' : '⚫ Hitam'} menang!`;
+        } else if (opponentInCheck) {
+          this.message = `⚠️ SKAK! ${msg}`;
+        } else if (!this.hasAnyLegalMove(this.turn)) {
+          this.gameOver = { winner: 'draw', reason: 'stalemate' };
+          this.message = '🤝 Seri — tidak ada gerakan legal!';
+        } else {
+          this.message = msg;
+        }
+
         this.render();
         return;
       }
@@ -151,12 +257,18 @@ export class KidsChessGame {
         return;
       }
       this.selected = null;
-      this.message = '';
+      this.message = this.inCheck === this.turn ? '⚠️ Kamu dalam SKAK — lindungi Raja!' : '';
       this.render();
       return;
     }
 
     if (piece && this.pieceColor(piece) === this.turn) {
+      const legal = this.getLegalMoves(row, col);
+      if (legal.length === 0) {
+        this.message = `${PIECES[piece].name} tidak bisa bergerak (SKAK?)`;
+        this.render();
+        return;
+      }
       this.selected = [row, col];
       this.message = `Gerakkan ${PIECES[piece].emoji} ${PIECES[piece].name}`;
       this.render();
@@ -172,17 +284,18 @@ export class KidsChessGame {
     this.container.innerHTML = `
       <div class="screen menu-screen">
         <div class="menu-bg"></div>
-        <div class="menu-content">
+        <div class="menu-content menu-wide">
           <div class="logo">♟️</div>
           <h1>Catur Anak</h1>
-          <p class="subtitle">Usia 4–10 tahun · gerakkan bidaknya!</p>
+          <p class="subtitle">Usia 4–10 tahun · aturan skak!</p>
+          <div class="rules-box">
+            <div class="rule-item"><span>👆</span> Ketuk bidak, lalu kotak tujuan</div>
+            <div class="rule-item"><span>⚠️</span> <strong>Skak</strong> = Raja terancam — harus dilindungi!</div>
+            <div class="rule-item"><span>♟️</span> <strong>Skak mat</strong> = Raja tertangkap, game selesai</div>
+            <div class="rule-item"><span>👸</span> Ratu dimakan = peringatan khusus!</div>
+          </div>
           <button class="btn btn-primary" data-action="play">Mulai Bermain</button>
           <button class="btn btn-ghost" data-action="exit">← Kembali ke Menu</button>
-          <div class="how-to">
-            <p>👆 Ketuk bidak, lalu ketuk kotak tujuan</p>
-            <p>🐣 Pion maju · 🐴 kuda loncat · 👑 raja 1 langkah</p>
-            <p>🎨 Putih dulu, lalu hitam — giliran bergantian</p>
-          </div>
         </div>
       </div>
     `;
@@ -191,26 +304,24 @@ export class KidsChessGame {
 
   renderPlay() {
     let highlightMoves = [];
-    if (this.selected) {
-      highlightMoves = this.getKidMoves(
-        this.selected[0],
-        this.selected[1],
-        this.board[this.selected[0]][this.selected[1]]
-      );
+    if (this.selected && !this.gameOver) {
+      highlightMoves = this.getLegalMoves(this.selected[0], this.selected[1]);
     }
+
+    const kingPos = this.inCheck ? this.findKing(this.inCheck) : null;
 
     const rows = this.board
       .map((row, r) => {
         const cells = row
           .map((piece, c) => {
             const light = (r + c) % 2 === 0;
-            const selected =
-              this.selected && this.selected[0] === r && this.selected[1] === c;
+            const selected = this.selected && this.selected[0] === r && this.selected[1] === c;
             const hint = highlightMoves.some(([hr, hc]) => hr === r && hc === c);
+            const kingCheck = kingPos && kingPos[0] === r && kingPos[1] === c;
             const info = piece ? PIECES[piece] : null;
             return `
               <button
-                class="chess-cell ${light ? 'light' : 'dark'} ${selected ? 'selected' : ''} ${hint ? 'hint' : ''}"
+                class="chess-cell ${light ? 'light' : 'dark'} ${selected ? 'selected' : ''} ${hint ? 'hint' : ''} ${kingCheck ? 'in-check' : ''}"
                 data-row="${r}" data-col="${c}"
                 aria-label="${info ? info.name : 'kosong'}"
               >
@@ -225,6 +336,23 @@ export class KidsChessGame {
       .join('');
 
     const turnLabel = this.turn === 'w' ? '⚪ Putih' : '⚫ Hitam';
+    const checkBanner = this.inCheck && !this.gameOver
+      ? `<div class="chess-check-banner">⚠️ SKAK! Lindungi Raja ${this.inCheck === 'w' ? 'Putih' : 'Hitam'}!</div>`
+      : '';
+
+    const overlay = this.gameOver
+      ? `
+      <div class="chess-overlay">
+        <div class="chess-overlay-card">
+          <div class="chess-overlay-icon">${this.gameOver.winner === 'draw' ? '🤝' : '🏆'}</div>
+          <h3>${this.gameOver.winner === 'draw' ? 'Seri!' : 'Selamat!'}</h3>
+          <p>${this.message}</p>
+          <button class="btn btn-primary" data-action="reset">Main Lagi</button>
+          <button class="btn btn-ghost" data-action="back">Menu</button>
+        </div>
+      </div>
+    `
+      : '';
 
     this.container.innerHTML = `
       <div class="screen chess-play-screen">
@@ -236,13 +364,15 @@ export class KidsChessGame {
           </div>
           <button class="btn-icon chess-reset" data-action="reset" title="Reset">↺</button>
         </header>
+        ${checkBanner}
         <div class="chess-message">${this.message || 'Ketuk bidak untuk mulai'}</div>
         <div class="chess-board-wrap">
           <div class="chess-board">${rows}</div>
         </div>
         <div class="chess-legend">
-          <span>👑 Raja</span><span>🐴 Kuda</span><span>🐣 Pion</span><span>🏰 Benteng</span>
+          <span>👑 Raja</span><span>👸 Ratu</span><span>⚠️ Skak</span><span>♟️ Skak mat</span>
         </div>
+        ${overlay}
       </div>
     `;
 

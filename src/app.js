@@ -25,6 +25,7 @@ export class App {
       { id: 'catch', icon: '🧺', title: 'Tangkap Benda', desc: 'Adu skor 60 detik', cls: 'catch', mp: '2' },
       { id: 'puzzle', icon: '🧩', title: 'Puzzle Balapan', desc: 'Siapa selesai dulu', cls: 'puzzle', mp: '2' },
       { id: 'simon', icon: '🎵', title: 'Simon Says', desc: 'Ikut pola warna', cls: 'simon', mp: '2-4' },
+      { id: 'getrich', icon: '💰', title: 'Kaya Raya', desc: 'Monopoli Get Rich', cls: 'getrich', mp: '2-4' },
     ];
 
     this.container.innerHTML = `
@@ -109,6 +110,9 @@ export class App {
     } else if (name === 'simon') {
       const { SimonSaysGame } = await import('./simon-says.js');
       this.currentGame = new SimonSaysGame(this.container, () => this.showHub());
+    } else if (name === 'getrich') {
+      const { GetRichGame } = await import('./get-rich.js');
+      this.currentGame = new GetRichGame(this.container, () => this.showHub());
     }
   }
 }
